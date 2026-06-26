@@ -1,0 +1,1634 @@
+--- Fortnite.digest.verse
++++ Fortnite.digest.verse
+@@ -2,7 +2,7 @@
+ #################################################
+ # Generated Digest of Verse API
+ # DO NOT modify this manually!
+-# Generated from build: ++Fortnite+Release-41.00-CL-54872343
++# Generated from build: ++Fortnite+Release-41.10-CL-55335788
+ #################################################
+ 
+ # Module import path: /Fortnite.com/UI
+@@ -261,6 +261,7 @@
+ 
+         @available {MinUploadedAtFNVersion := 3720}
+         Jump<public>:input_action(logic) = external {}
++
+ # Module import path: /Fortnite.com/AI
+ AI<public> := module:
+     using {/Verse.org/SceneGraph}
+@@ -684,122 +685,7 @@
+         # Restarts the VFX. Triggers the VFX if it's Burst VFX.
+         Restart<native><public>():void
+ 
+-    # The state of a progress_based_mesh_device.
+-    progress_device_state<public> := enum<open>:
+-        # This device is currently progressing, and will increase its 'CurrentProgress' by its 'ProgressRate'.
+-        Progress
+-        # This device is currently regressing, and will decrease its 'CurrentProgress' by its 'RegressRate'.
+-        Regress
+-        # This device is currently paused. It will not progress or regress automatically.
+-        Pause
+-
+-    # This device is used to associate changes in progression with a mesh transition. As the device's progression changes, it will transition between a set of defined meshes.
+-    #  The ThresholdMesh field can be found under the 'Visuals' category on an instance of a progress_based_mesh_device in Unreal Editor Fortnite.
+-    progress_based_mesh_device<public> := class<concrete><final>(creative_device_base):
+-        # This value maps to the 'ProgressTarget' user option.
+-        #  The target Progress goal of this value.
+-        #  Setting this value will clamp it between 0 and 100.
+-        #  If 'ProgressTarget' is set to a value lower than 'CurrentProgress', 'CurrentProgress' will be clamped to 'ProgressTarget', and fire any threshold related events.
+-        var ProgressTarget<public>:float = external {}
+-
+-        # The current progress this device has made towards its ProgressTarget.
+-        #  This value will be clamped between 0 and Progress Target.
+-        #  Modifying this value will cause changes Mesh Changes corresponding to your defined ThresholdMeshes.
+-        var CurrentProgress<public>:float = external {}
+-
+-        # The current state of this device.
+-        var ProgressState<public>:progress_device_state = external {}
+-
+-        # This value maps to the 'ProgressRate' user option.
+-        #  When this device is in the Progress state, 'CurrentProgress' will be increased by this value per second until it reaches the 'ProgressTarget'.
+-        #  Utilizing this value is not required, as 'CurrentProgress' can also be modified directly.
+-        var ProgressRate<public>:float = external {}
+-
+-        # This value maps to the 'RegressRate' user option.
+-        #  When this device is in the Regress state, 'CurrentProgress' will be decreased by this value per second until it reaches the 0.
+-        #  Utilizing this value is not required, as 'CurrentProgress' can also be modified directly.
+-        var RegressRate<public>:float = external {}
+-
+-        # This event is fired whenever 'CurrentProgress' reaches the 'ProgressTarget'.
+-        FillEvent<public>:listenable(tuple()) = external {}
+-
+-        # This event is fired whenever 'CurrentProgress' reaches 0.
+-        EmptyEvent<public>:listenable(tuple()) = external {}
+-
+-        # This event is fired whenever 'CurrentProgress' value gets changed, whether through direct modification, or as a result of the Progress or Regress state.
+-        ProgressChangeEvent<public>:listenable(float) = external {}
+-
+-        # # This event fires whenever this device changes meshes as a result of 'CurrentProgress' value causing a new Threshold to be met.
+-        #  The ThresholdMeshe field can be found under the 'Visuals' category on an instance of a progress_based_mesh_device in Unreal Editor Fortnite.
+-        ProgressThresholdCrossEvent<public>:listenable(float) = external {}
+-
+     using {/Verse.org/Simulation}
+-    bank_vault_interface<public> := interface<epic_internal>(enableable):
+-        # Triggers when the vault sequence is started by a player or event.
+-        #  * Sends the `agent` that triggered this event, if applicable.
+-        StartSequenceEvent<public>:listenable(?agent)
+-
+-        # Triggers when the vault is opened either by the destruction of its weakpoints or by an event.
+-        #  * Sends the last `agent` that damaged a weakpoint or the `agent` that started the sequence if no external damage was done or none if the sequence was triggered by a function.
+-        OpenEvent<public>:listenable(?agent)
+-
+-        # Triggers when a weakpoint is activated. The weakpoint will begin to glow, but does not become vulnerable until a subsequent `WeakpointVulnerableEvent`.
+-        #  * Sends the `agent` that activated the vault or none if the sequence was triggered by a function, and the `int` index of the weakpoint from 0-4, in order of activation.
+-        ActivateWeakpointEvent<public>:listenable(tuple(?agent, int))
+-
+-        # Triggers when a weakpoint becomes vulnerable.
+-        #  * Sends the `agent` that activated the vault or none if the sequence was triggered by a function, and the `int` index of the weakpoint from 0-4, in order of activation.
+-        WeakpointVulnerableEvent<public>:listenable(tuple(?agent, int))
+-
+-        # Triggers when a weakpoint is destroyed.
+-        #  * Sends the last `agent` that damaged the weakpoint or the `agent` that started the sequence if no external damage was done or none if the sequence was triggered by a function, and the `int` index of the weakpoint from 0-4, in order of activation.
+-        DestroyWeakpointEvent<public>:listenable(tuple(?agent, int))
+-
+-        # Destroys the remaining weakpoints and opens the vault door. Requires the device to be enabled.
+-        ForceOpen<public>():void
+-
+-        # Begin the sequence of events to open the vault door without thermite, or unpauses the sequence if it was paused. Requires the device to be enabled. Weakpoints can only be damaged while the vault sequence is active.
+-        StartSequence<public>():void
+-
+-        # Disable the weakpoint vulnerability and freeze the progress of each one. Weakpoints can only be damaged while the vault sequence is active.
+-        PauseSequence<public>():void
+-
+-        # Restores vault to default state, deactivates the device, and heals all weakpoints to max health. Requires the device to be enabled.
+-        (/Fortnite.com/Devices/bank_vault_interface:)Reset<public>():void
+-
+-        # Whether the vault sequence is currently active and not paused.
+-        IsSequenceActive<public>()<transacts><decides>:void
+-
+-        # Whether the player needs thermite when interacting with the door to start the vault opening sequence.
+-        var RequireThermite<public>:logic
+-
+-        # Damage dealt to the active weakpoint each second. Negative numbers heal the weakpoint. Weakpoints can only be damaged while the vault sequence is active.
+-        var WeakpointDamagePerSecond<public>:float
+-
+-        # Whether the weakpoint takes damage from weapons and items while vault sequence is active.
+-        var WeakpointTakesExternalDamage<public>:logic
+-
+-        # Destroy the active weakpoint. Requires the device to be enabled. Must have active weakpoint.
+-        DestroyActiveWeakpoint<public>():void
+-
+-        # Restores the active weakpoint to full health. Requires the device to be enabled. Must have active weakpoint.
+-        RestoreActiveWeakpoint<public>():void
+-
+-        # Gets the active weakpoint's index starting at `0`, regardless of device's enabled state. Returns false if there is no active weakpoint, such as when the sequence is not active or directly after a weakpoint is destroyed.
+-        GetActiveWeakpointIndex<public>()<transacts><decides>:int
+-
+-        # Gets the total number of weakpoints.
+-        GetWeakpointCount<public>():int
+-
+-        # Get active weakpoint's health. If there is no active weakpoint, returns false.
+-        GetActiveWeakpointHealth<public>()<transacts><decides>:float
+-
+-        # Set active weakpoint's health. Setting it to `0.0` or false will destroy the weakpoint. Clamps to maximum of WeakpointMaxHealth.
+-        SetActiveWeakpointHealth<public>(newHealth:float):void
+-
+-        # The max health of this device's weakpoints.
+-        var<internal> MaxWeakpointHealth<public>:float
+-
+     #  Represents a poll.
+     # For example, in a poll “What to have for lunch?” the group represents the question and contains the possible answers.
+     # Owns the overall state of the poll and keeps track of available options.
+@@ -879,6 +765,121 @@
+ 
+         GetOptionDescription<override>():message = external {}
+ 
++    # The state of a progress_based_mesh_device.
++    progress_device_state<public> := enum<open>:
++        # This device is currently progressing, and will increase its 'CurrentProgress' by its 'ProgressRate'.
++        Progress
++        # This device is currently regressing, and will decrease its 'CurrentProgress' by its 'RegressRate'.
++        Regress
++        # This device is currently paused. It will not progress or regress automatically.
++        Pause
++
++    # This device is used to associate changes in progression with a mesh transition. As the device's progression changes, it will transition between a set of defined meshes.
++    #  The ThresholdMesh field can be found under the 'Visuals' category on an instance of a progress_based_mesh_device in Unreal Editor Fortnite.
++    progress_based_mesh_device<public> := class<concrete><final>(creative_device_base):
++        # This value maps to the 'ProgressTarget' user option.
++        #  The target Progress goal of this value.
++        #  Setting this value will clamp it between 0 and 100.
++        #  If 'ProgressTarget' is set to a value lower than 'CurrentProgress', 'CurrentProgress' will be clamped to 'ProgressTarget', and fire any threshold related events.
++        var ProgressTarget<public>:float = external {}
++
++        # The current progress this device has made towards its ProgressTarget.
++        #  This value will be clamped between 0 and Progress Target.
++        #  Modifying this value will cause changes Mesh Changes corresponding to your defined ThresholdMeshes.
++        var CurrentProgress<public>:float = external {}
++
++        # The current state of this device.
++        var ProgressState<public>:progress_device_state = external {}
++
++        # This value maps to the 'ProgressRate' user option.
++        #  When this device is in the Progress state, 'CurrentProgress' will be increased by this value per second until it reaches the 'ProgressTarget'.
++        #  Utilizing this value is not required, as 'CurrentProgress' can also be modified directly.
++        var ProgressRate<public>:float = external {}
++
++        # This value maps to the 'RegressRate' user option.
++        #  When this device is in the Regress state, 'CurrentProgress' will be decreased by this value per second until it reaches the 0.
++        #  Utilizing this value is not required, as 'CurrentProgress' can also be modified directly.
++        var RegressRate<public>:float = external {}
++
++        # This event is fired whenever 'CurrentProgress' reaches the 'ProgressTarget'.
++        FillEvent<public>:listenable(tuple()) = external {}
++
++        # This event is fired whenever 'CurrentProgress' reaches 0.
++        EmptyEvent<public>:listenable(tuple()) = external {}
++
++        # This event is fired whenever 'CurrentProgress' value gets changed, whether through direct modification, or as a result of the Progress or Regress state.
++        ProgressChangeEvent<public>:listenable(float) = external {}
++
++        # # This event fires whenever this device changes meshes as a result of 'CurrentProgress' value causing a new Threshold to be met.
++        #  The ThresholdMeshe field can be found under the 'Visuals' category on an instance of a progress_based_mesh_device in Unreal Editor Fortnite.
++        ProgressThresholdCrossEvent<public>:listenable(float) = external {}
++
++    bank_vault_interface<public> := interface<epic_internal>(enableable):
++        # Triggers when the vault sequence is started by a player or event.
++        #  * Sends the `agent` that triggered this event, if applicable.
++        StartSequenceEvent<public>:listenable(?agent)
++
++        # Triggers when the vault is opened either by the destruction of its weakpoints or by an event.
++        #  * Sends the last `agent` that damaged a weakpoint or the `agent` that started the sequence if no external damage was done or none if the sequence was triggered by a function.
++        OpenEvent<public>:listenable(?agent)
++
++        # Triggers when a weakpoint is activated. The weakpoint will begin to glow, but does not become vulnerable until a subsequent `WeakpointVulnerableEvent`.
++        #  * Sends the `agent` that activated the vault or none if the sequence was triggered by a function, and the `int` index of the weakpoint from 0-4, in order of activation.
++        ActivateWeakpointEvent<public>:listenable(tuple(?agent, int))
++
++        # Triggers when a weakpoint becomes vulnerable.
++        #  * Sends the `agent` that activated the vault or none if the sequence was triggered by a function, and the `int` index of the weakpoint from 0-4, in order of activation.
++        WeakpointVulnerableEvent<public>:listenable(tuple(?agent, int))
++
++        # Triggers when a weakpoint is destroyed.
++        #  * Sends the last `agent` that damaged the weakpoint or the `agent` that started the sequence if no external damage was done or none if the sequence was triggered by a function, and the `int` index of the weakpoint from 0-4, in order of activation.
++        DestroyWeakpointEvent<public>:listenable(tuple(?agent, int))
++
++        # Destroys the remaining weakpoints and opens the vault door. Requires the device to be enabled.
++        ForceOpen<public>():void
++
++        # Begin the sequence of events to open the vault door without thermite, or unpauses the sequence if it was paused. Requires the device to be enabled. Weakpoints can only be damaged while the vault sequence is active.
++        StartSequence<public>():void
++
++        # Disable the weakpoint vulnerability and freeze the progress of each one. Weakpoints can only be damaged while the vault sequence is active.
++        PauseSequence<public>():void
++
++        # Restores vault to default state, deactivates the device, and heals all weakpoints to max health. Requires the device to be enabled.
++        (/Fortnite.com/Devices/bank_vault_interface:)Reset<public>():void
++
++        # Whether the vault sequence is currently active and not paused.
++        IsSequenceActive<public>()<transacts><decides>:void
++
++        # Whether the player needs thermite when interacting with the door to start the vault opening sequence.
++        var RequireThermite<public>:logic
++
++        # Damage dealt to the active weakpoint each second. Negative numbers heal the weakpoint. Weakpoints can only be damaged while the vault sequence is active.
++        var WeakpointDamagePerSecond<public>:float
++
++        # Whether the weakpoint takes damage from weapons and items while vault sequence is active.
++        var WeakpointTakesExternalDamage<public>:logic
++
++        # Destroy the active weakpoint. Requires the device to be enabled. Must have active weakpoint.
++        DestroyActiveWeakpoint<public>():void
++
++        # Restores the active weakpoint to full health. Requires the device to be enabled. Must have active weakpoint.
++        RestoreActiveWeakpoint<public>():void
++
++        # Gets the active weakpoint's index starting at `0`, regardless of device's enabled state. Returns false if there is no active weakpoint, such as when the sequence is not active or directly after a weakpoint is destroyed.
++        GetActiveWeakpointIndex<public>()<transacts><decides>:int
++
++        # Gets the total number of weakpoints.
++        GetWeakpointCount<public>():int
++
++        # Get active weakpoint's health. If there is no active weakpoint, returns false.
++        GetActiveWeakpointHealth<public>()<transacts><decides>:float
++
++        # Set active weakpoint's health. Setting it to `0.0` or false will destroy the weakpoint. Clamps to maximum of WeakpointMaxHealth.
++        SetActiveWeakpointHealth<public>(newHealth:float):void
++
++        # The max health of this device's weakpoints.
++        var<internal> MaxWeakpointHealth<public>:float
++
+     # Used to select, spawn, and configure a skeletal mesh to play a specific animation.
+     animated_mesh_device<public> := class<concrete><final>(creative_device_base):
+         # Starts or resumes playback of the animation.
+@@ -1316,6 +1317,125 @@
+ 
+         # Remove items from `Agent`s inventory. The items that are removed can be configured using *Affected Items*.
+         Remove<public>(Agent:agent):void = external {}
++
++    # Used to allow agents to turn other linked devices on/off or other custom state changes.
++    switch_device<public> := class<concrete><final>(creative_device_base):
++        # Signaled when the switch is turned on by the specified `agent`.
++        # Sends the `agent` that turned on the device.
++        TurnedOnEvent<public>:listenable(agent) = external {}
++
++        # Signaled when the switch is turned off by the specified `agent`.
++        # Sends the `agent` that turned off the device.
++        TurnedOffEvent<public>:listenable(agent) = external {}
++
++        # Signaled if the switch is on when the state is checked.
++        IfOnWhenCheckedEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled if the switch is off when the state is checked.
++        IfOffWhenCheckedEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the switch state is saved.
++        StateSaveEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the switch state changes.
++        StateChangesEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the switch state is loaded by the specified `agent`.
++        # Sends the `agent` that loaded the state on the device.
++        StateLoadEvent<public>:listenable(agent) = external {}
++
++        # Signaled when the persistent data is cleared by the specified `agent`.
++        # Sends the `agent` that cleared persistent data on the device.
++        ClearEvent<public>:listenable(agent) = external {}
++
++        # Enables this device.
++        Enable<public>():void = external {}
++
++        # Disables this device.
++        Disable<public>():void = external {}
++
++        # Turns on this device with `Agent` acting as the instigator of the action.
++        TurnOn<public>(Agent:agent):void = external {}
++
++        # Turns off the device with `Agent` acting as the instigator of the action.
++        TurnOff<public>(Agent:agent):void = external {}
++
++        # Toggles between `TurnOn` and `TurnOff` with `Agent` acting as the instigator of the action.
++        ToggleState<public>(Agent:agent):void = external {}
++
++        # Loads the device state with `Agent` acting as the instigator of the action.
++        LoadState<public>(Agent:agent):void = external {}
++
++        # Saves the device state with `Agent` acting as the instigator of the action.
++        SaveState<public>(Agent:agent):void = external {}
++
++        # Loads the device state for all players.
++        LoadStateForAll<public>():void = external {}
++
++        # Saves the device state for all players
++        SaveStateForAll<public>():void = external {}
++
++        # Checks the device state with `Agent` acting as the instigator of the action.
++        CheckState<public>(Agent:agent):void = external {}
++
++        # Clears persistence data for `Agent`.
++        ClearPersistenceData<public>(Agent:agent):void = external {}
++
++        # Clears persistence data for all `agent`s.
++        ClearAllPersistenceData<public>():void = external {}
++
++        # Succeeds if the current state of this switch is on, fails otherwise. Use this overload  of `GetCurrentState` when this device has *Store State Per Player* set to *Yes*.
++        GetCurrentState<public>(Agent:agent)<transacts><decides>:void = external {}
++
++        # Succeeds if the current state of this switch is on, fails otherwise. Use this overload  of `GetCurrentState` when this device has *Store State Per Player* set to *No*.
++        GetCurrentState<public>()<transacts><decides>:void = external {}
++
++        # Query whether this device has a single global on/off state, or has a personalized on/off state for each individual agent.
++        IsStatePerAgent<public>()<transacts><decides>:void = external {}
++
++        # Sets the *Interaction Time* required to activate this device (in seconds).
++        SetInteractionTime<public>(Time:float):void = external {}
++
++        # Returns the *Interaction Time* required to activate this device (in seconds).
++        GetInteractionTime<public>()<transacts>:float = external {}
++
++        # Sets the *Turn On Text* to be displayed to a user when the switch is currently off, and offers an interaction to switch it on. Clamped to 150 characters.
++        SetTurnOnInteractionText<public>(Text:message):void = external {}
++
++        # Sets the *Turn Off Text* to be displayed to a user when the switch is currently on, and offers an interaction to switch it off. Clamped to 150 characters.
++        SetTurnOffInteractionText<public>(Text:message):void = external {}
++
++        # Sets the state of the switch to a specific value for a specific `Agent`.
++        #  Use when the device has *Store State Per Player* set to *Yes*.
++        SetState<public>(Agent:agent, State:logic):void = external {}
++
++        # Sets the state of the switch to a specific value.
++        #  Use when the device has *Store State Per Player* set to *No*.
++        SetState<public>(State:logic):void = external {}
++
++        # Updates the *State Reset Time* for the device, in seconds, clamped to the Min and Max defined in the device.
++        #  This will not apply to any state reset timers currently in effect.
++        #  Set to 0.0 to disable the State Reset Time. Set to less than 0.0 to reset to default.
++        SetStateResetTime<public>(Time:float):void = external {}
++
++        # Updates the *State Reset Time* for the device, in seconds,for a specific player (if *Store State Per Player* is *Yes*), clamped to the Min and Max defined in the device.
++        #  This will not apply to any state reset timers currently in effect.
++        #  Set to 0.0 to disable the State Reset Time. Set to less than 0.0 to reset to default.
++        SetStateResetTime<public>(Agent:agent, Time:float):void = external {}
++
++        # Returns the value of *State Reset Time*, in seconds, for the device. Returns -1.0 if *State Reset Time* is not used.
++        GetStateResetTime<public>()<transacts>:float = external {}
++
++        # Returns the value of *State Reset Time*, in seconds, for the device, for a specific player. Returns -1.0 if *State Reset Time* is not used.
++        GetStateResetTime<public>(Agent:agent)<transacts>:float = external {}
++
++        # Returns the time, in seconds, before the switch will reset itself to default.
++        #  Returns -1.0 if *Store State Per Player* is *Yes* or if  there is no active reset timer.
++        GetCurrentResetTime<public>():float = external {}
++
++        # Returns the time, in seconds, before the switch will reset itself to default for *Agent*.
++        #  Returns -1.0 if there is no active reset timer.
++        GetCurrentResetTime<public>(Agent:agent):float = external {}
+ 
+     # Used to mark an `agent`'s position on the minimap and configure the information shown for marked `agent`s.
+     # 
+@@ -1358,6 +1478,69 @@
+         # Detaches markers from all marked `agent`s.
+         DetachFromAll<public>():void = external {}
+ 
++    # Used to move around a building or prop, and customize responses to various collision event types.
++    prop_mover_device<public> := class<concrete><final>(creative_device_base):
++        # Signaled when this device is enabled.
++        EnabledEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when this device is disabled.
++        DisabledEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the prop movement begins.
++        BeganEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the prop movement ends.
++        EndedEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the prop reaches its destination.
++        FinishedEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the prop changes its direction.
++        MovementModeChangedEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the prop hits an `agent`.
++        # Sends the `agent` hit by the prop.
++        AgentHitEvent<public>:listenable(agent) = external {}
++
++        # Signaled when the prop hits a creature, animal, or NPC.
++        AIHitEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the prop hits another prop.
++        PropHitEvent<public>:listenable(tuple()) = external {}
++
++        # Enables this device.
++        Enable<public>():void = external {}
++
++        # Disables this device.
++        Disable<public>():void = external {}
++
++        # Moves the prop to its original position.
++        (/Fortnite.com/Devices/prop_mover_device:)Reset<public>():void = external {}
++
++        # Begins the prop moving.
++        Begin<public>():void = external {}
++
++        # Ends the prop moving.
++        End<public>():void = external {}
++
++        # Moves the prop forward based on this device's default configuration, ignoring the prop's previous movement.
++        Advance<public>():void = external {}
++
++        # Reverses the prop's moving direction.
++        Reverse<public>():void = external {}
++
++        # Sets the total distance (in meters) that the prop will move.
++        SetTargetDistance<public>(InDistance:float):void = external {}
++
++        # Returns the total distance (in meters) that the prop will move.
++        GetTargetDistance<public>()<transacts>:float = external {}
++
++        # Sets the speed (in meters per second) at which the prop will move to its destination.
++        SetTargetSpeed<public>(Speed:float):void = external {}
++
++        # Returns the speed (in meters per second) at which the prop mover will move the prop to its destination.
++        GetTargetSpeed<public>()<transacts>:float = external {}
++
+     # Used to trigger in game events based on real world time.
+     real_time_clock_device<public> := class<concrete><final>(creative_device_base):
+         # Signaled when the optional second *Duration* time has been reached.
+@@ -1378,188 +1561,6 @@
+         # Disables this device.
+         Disable<public>():void = external {}
+ 
+-    # Used to allow agents to turn other linked devices on/off or other custom state changes.
+-    switch_device<public> := class<concrete><final>(creative_device_base):
+-        # Signaled when the switch is turned on by the specified `agent`.
+-        # Sends the `agent` that turned on the device.
+-        TurnedOnEvent<public>:listenable(agent) = external {}
+-
+-        # Signaled when the switch is turned off by the specified `agent`.
+-        # Sends the `agent` that turned off the device.
+-        TurnedOffEvent<public>:listenable(agent) = external {}
+-
+-        # Signaled if the switch is on when the state is checked.
+-        IfOnWhenCheckedEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled if the switch is off when the state is checked.
+-        IfOffWhenCheckedEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the switch state is saved.
+-        StateSaveEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the switch state changes.
+-        StateChangesEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the switch state is loaded by the specified `agent`.
+-        # Sends the `agent` that loaded the state on the device.
+-        StateLoadEvent<public>:listenable(agent) = external {}
+-
+-        # Signaled when the persistent data is cleared by the specified `agent`.
+-        # Sends the `agent` that cleared persistent data on the device.
+-        ClearEvent<public>:listenable(agent) = external {}
+-
+-        # Enables this device.
+-        Enable<public>():void = external {}
+-
+-        # Disables this device.
+-        Disable<public>():void = external {}
+-
+-        # Turns on this device with `Agent` acting as the instigator of the action.
+-        TurnOn<public>(Agent:agent):void = external {}
+-
+-        # Turns off the device with `Agent` acting as the instigator of the action.
+-        TurnOff<public>(Agent:agent):void = external {}
+-
+-        # Toggles between `TurnOn` and `TurnOff` with `Agent` acting as the instigator of the action.
+-        ToggleState<public>(Agent:agent):void = external {}
+-
+-        # Loads the device state with `Agent` acting as the instigator of the action.
+-        LoadState<public>(Agent:agent):void = external {}
+-
+-        # Saves the device state with `Agent` acting as the instigator of the action.
+-        SaveState<public>(Agent:agent):void = external {}
+-
+-        # Loads the device state for all players.
+-        LoadStateForAll<public>():void = external {}
+-
+-        # Saves the device state for all players
+-        SaveStateForAll<public>():void = external {}
+-
+-        # Checks the device state with `Agent` acting as the instigator of the action.
+-        CheckState<public>(Agent:agent):void = external {}
+-
+-        # Clears persistence data for `Agent`.
+-        ClearPersistenceData<public>(Agent:agent):void = external {}
+-
+-        # Clears persistence data for all `agent`s.
+-        ClearAllPersistenceData<public>():void = external {}
+-
+-        # Succeeds if the current state of this switch is on, fails otherwise. Use this overload  of `GetCurrentState` when this device has *Store State Per Player* set to *Yes*.
+-        GetCurrentState<public>(Agent:agent)<transacts><decides>:void = external {}
+-
+-        # Succeeds if the current state of this switch is on, fails otherwise. Use this overload  of `GetCurrentState` when this device has *Store State Per Player* set to *No*.
+-        GetCurrentState<public>()<transacts><decides>:void = external {}
+-
+-        # Query whether this device has a single global on/off state, or has a personalized on/off state for each individual agent.
+-        IsStatePerAgent<public>()<transacts><decides>:void = external {}
+-
+-        # Sets the *Interaction Time* required to activate this device (in seconds).
+-        SetInteractionTime<public>(Time:float):void = external {}
+-
+-        # Returns the *Interaction Time* required to activate this device (in seconds).
+-        GetInteractionTime<public>()<transacts>:float = external {}
+-
+-        # Sets the *Turn On Text* to be displayed to a user when the switch is currently off, and offers an interaction to switch it on. Clamped to 150 characters.
+-        SetTurnOnInteractionText<public>(Text:message):void = external {}
+-
+-        # Sets the *Turn Off Text* to be displayed to a user when the switch is currently on, and offers an interaction to switch it off. Clamped to 150 characters.
+-        SetTurnOffInteractionText<public>(Text:message):void = external {}
+-
+-        # Sets the state of the switch to a specific value for a specific `Agent`.
+-        #  Use when the device has *Store State Per Player* set to *Yes*.
+-        SetState<public>(Agent:agent, State:logic):void = external {}
+-
+-        # Sets the state of the switch to a specific value.
+-        #  Use when the device has *Store State Per Player* set to *No*.
+-        SetState<public>(State:logic):void = external {}
+-
+-        # Updates the *State Reset Time* for the device, in seconds, clamped to the Min and Max defined in the device.
+-        #  This will not apply to any state reset timers currently in effect.
+-        #  Set to 0.0 to disable the State Reset Time. Set to less than 0.0 to reset to default.
+-        SetStateResetTime<public>(Time:float):void = external {}
+-
+-        # Updates the *State Reset Time* for the device, in seconds,for a specific player (if *Store State Per Player* is *Yes*), clamped to the Min and Max defined in the device.
+-        #  This will not apply to any state reset timers currently in effect.
+-        #  Set to 0.0 to disable the State Reset Time. Set to less than 0.0 to reset to default.
+-        SetStateResetTime<public>(Agent:agent, Time:float):void = external {}
+-
+-        # Returns the value of *State Reset Time*, in seconds, for the device. Returns -1.0 if *State Reset Time* is not used.
+-        GetStateResetTime<public>()<transacts>:float = external {}
+-
+-        # Returns the value of *State Reset Time*, in seconds, for the device, for a specific player. Returns -1.0 if *State Reset Time* is not used.
+-        GetStateResetTime<public>(Agent:agent)<transacts>:float = external {}
+-
+-        # Returns the time, in seconds, before the switch will reset itself to default.
+-        #  Returns -1.0 if *Store State Per Player* is *Yes* or if  there is no active reset timer.
+-        GetCurrentResetTime<public>():float = external {}
+-
+-        # Returns the time, in seconds, before the switch will reset itself to default for *Agent*.
+-        #  Returns -1.0 if there is no active reset timer.
+-        GetCurrentResetTime<public>(Agent:agent):float = external {}
+-
+-    # Used to move around a building or prop, and customize responses to various collision event types.
+-    prop_mover_device<public> := class<concrete><final>(creative_device_base):
+-        # Signaled when this device is enabled.
+-        EnabledEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when this device is disabled.
+-        DisabledEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the prop movement begins.
+-        BeganEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the prop movement ends.
+-        EndedEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the prop reaches its destination.
+-        FinishedEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the prop changes its direction.
+-        MovementModeChangedEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the prop hits an `agent`.
+-        # Sends the `agent` hit by the prop.
+-        AgentHitEvent<public>:listenable(agent) = external {}
+-
+-        # Signaled when the prop hits a creature, animal, or NPC.
+-        AIHitEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the prop hits another prop.
+-        PropHitEvent<public>:listenable(tuple()) = external {}
+-
+-        # Enables this device.
+-        Enable<public>():void = external {}
+-
+-        # Disables this device.
+-        Disable<public>():void = external {}
+-
+-        # Moves the prop to its original position.
+-        (/Fortnite.com/Devices/prop_mover_device:)Reset<public>():void = external {}
+-
+-        # Begins the prop moving.
+-        Begin<public>():void = external {}
+-
+-        # Ends the prop moving.
+-        End<public>():void = external {}
+-
+-        # Moves the prop forward based on this device's default configuration, ignoring the prop's previous movement.
+-        Advance<public>():void = external {}
+-
+-        # Reverses the prop's moving direction.
+-        Reverse<public>():void = external {}
+-
+-        # Sets the total distance (in meters) that the prop will move.
+-        SetTargetDistance<public>(InDistance:float):void = external {}
+-
+-        # Returns the total distance (in meters) that the prop will move.
+-        GetTargetDistance<public>()<transacts>:float = external {}
+-
+-        # Sets the speed (in meters per second) at which the prop will move to its destination.
+-        SetTargetSpeed<public>(Speed:float):void = external {}
+-
+-        # Returns the speed (in meters per second) at which the prop mover will move the prop to its destination.
+-        GetTargetSpeed<public>()<transacts>:float = external {}
+-
+     # Used to configure and play audio from the device location or from registered `agent`s.
+     audio_player_device<public> := class<concrete><final>(creative_device_base):
+         # Enables this device. Allows this device to be triggered from other linked devices (i.e. triggers) and allow calls to `Play` to succeed.
+@@ -1612,23 +1613,20 @@
+         # Removes all previously registered `agent`s when using the *CanBeHeardBy* Registered Players or NonRegisteredPlayers options.
+         UnregisterAll<public>():void = external {}
+ 
+-    # Used to spawn fireflies that can be collected by `agent`s.
+-    firefly_spawner_device<public> := class<concrete><final>(creative_device_base):
+-        # Signaled when a firefly is collected.
+-        # Sends the `agent` collected the firefly.
+-        OnFirefliesCollected<public>:listenable(agent) = external {}
+-
++    # Used to send custom messages to the elimination feed.
++    elimination_feed_device<public> := class<concrete><final>(creative_device_base):
+         # Enables this device.
+         Enable<public>():void = external {}
+ 
+         # Disables this device.
+         Disable<public>():void = external {}
+ 
+-        # Spawns new fireflies. The previous fireflies will be destroyed before a new fireflies spawn.
+-        (/Fortnite.com/Devices/firefly_spawner_device:)Respawn<public>():void = external {}
+-
+-        # Resets respawn count.
+-        ResetRespawnCount<public>():void = external {}
++        # Activates this device. `Agent` is used as the instigator of the action.
++        Activate<public>(Agent:agent):void = external {}
++
++        # Activates this device.
++        # Requires *Activated by Team / Class* be set to `All`.
++        Activate<public>():void = external {}
+ 
+     # Used to configure rules that can end the current round or game.
+     end_game_device<public> := class<concrete><final>(creative_device_base):
+@@ -1641,21 +1639,6 @@
+         # Ends the round/game. Uses `Agent`'s team to determine if the round/game ends when *Activating Team* is enabled.
+         Activate<public>(Agent:agent):void = external {}
+ 
+-    # Used to send custom messages to the elimination feed.
+-    elimination_feed_device<public> := class<concrete><final>(creative_device_base):
+-        # Enables this device.
+-        Enable<public>():void = external {}
+-
+-        # Disables this device.
+-        Disable<public>():void = external {}
+-
+-        # Activates this device. `Agent` is used as the instigator of the action.
+-        Activate<public>(Agent:agent):void = external {}
+-
+-        # Activates this device.
+-        # Requires *Activated by Team / Class* be set to `All`.
+-        Activate<public>():void = external {}
+-
+     # Allows pickup items to be placed in the world..
+     item_placer_device<public> := class<concrete><final>(creative_device_base):
+         # Enables this device.
+@@ -1663,6 +1646,90 @@
+ 
+         # Disables this device.
+         Disable<public>():void = external {}
++
++    # Used to track and react to how many players are in a particular area, and optionally display that information in game.
++    player_counter_device<public> := class<concrete><final>(creative_device_base):
++        # Signaled when the player count matches *Target Player Count*. The frequency of evaluation against *Target Player Count* can be controlled through the device settings.
++        CountSucceedsEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the player count does not match *Target Player Count*. The frequency of evaluation against *Target Player Count* can be controlled through the device settings.
++        CountFailsEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when a valid player enters the zone and is counted. The frequency of evaluation against the *Target Player Count* can be controlled through the device settings.
++        # Sends the `agent` that is now being counted.
++        CountedEvent<public>:listenable(agent) = external {}
++
++        # Signaled when a player is no longer counted by this device, such as when they leave the zone, leave the game, or are assigned to a different `team` or class.
++        # Sends the `agent` that is no longer being counted.
++        RemovedEvent<public>:listenable(agent) = external {}
++
++        # Enables this device.
++        Enable<public>():void = external {}
++
++        # Disables this device.
++        Disable<public>():void = external {}
++
++        # Resets *Target Player Count* to the default value defined in the device settings. If *Target Player Count* was previously incremented or decremented, this reset immediately triggers a new comparison.
++        (/Fortnite.com/Devices/player_counter_device:)Reset<public>():void = external {}
++
++        # Increments *Target Player Count* by `1`. Immediately triggers a new comparison.
++        IncrementTargetCount<public>():void = external {}
++
++        # Decrements *Target Player Count* by `1`. Immediately triggers a new comparison.
++        DecrementTargetCount<public>():void = external {}
++
++        # Triggers an evaluation of the current count vs *Target Player Count*, signaling `CountSucceedsEvent` or `CountFailsEvent` based on the evaluation result.
++        CompareToTarget<public>():void = external {}
++
++        # Triggers `CountedEvent` for all `agent`s currently being counted.
++        TransmitForAllCounted<public>():void = external {}
++
++        # Adds the player to the registered player list.
++        # *Track Registered Players* determines how registered players are counted.
++        Register<public>(Agent:agent):void = external {}
++
++        # Removes the player from the registered player list.
++        # *Track Registered Players* determines how registered players are counted.
++        Unregister<public>(Agent:agent):void = external {}
++
++        # Clears all players from the list of registered players.
++        # *Track Registered Players* determines how registered players are counted.
++        UnregisterAll<public>():void = external {}
++
++        # Show this device in the world as an info panel showing Current + Required player counts.
++        ShowInfoPanel<public>():void = external {}
++
++        # Hide this device info panel from the world.
++        HideInfoPanel<public>():void = external {}
++
++        # Returns whether this device is represented in the world as an info panel showing Current + Required player counts.
++        IsShowingInfoPanel<public>()<transacts><decides>:void = external {}
++
++        # Sets the number of players required for this counter to succeed. Immediately triggers a new comparison.
++        SetTargetCount<public>(Count:int):void = external {}
++
++        # Returns the number of players required for this counter to succeed.
++        GetTargetCount<public>()<transacts>:int = external {}
++
++        # Returns the number of players currently counted by this device
++        GetCount<public>()<transacts>:int = external {}
++
++        # Is true if the device is currently succeeding in its comparison.
++        IsPassingTest<public>()<transacts><decides>:void = external {}
++
++        # Is true if `Agent` is currently counted by this device.
++        IsCounted<public>(Agent:agent)<transacts><decides>:void = external {}
++
++        # Returns an array of agents that are currently counted by the device.
++        GetCountedAgents<public>()<reads>:[]agent = external {}
++
++    # Allows players to change their outfit in game!
++    changing_booth_device<public> := class<concrete><final>(creative_device_base):
++        # Signaled when a `player` enters the changing booth device.
++        PlayerEnterEvent<public>:listenable(player) = external {}
++
++        # Signaled when a `player` exits the changing booth device.
++        PlayerExitEvent<public>:listenable(player) = external {}
+ 
+     # Used to listen for the player activating or releasing certain inputs.
+     # The input is defined by the *Input* option.
+@@ -1701,13 +1768,58 @@
+         # Succeeds if `Agent` is currently holding the input.
+         IsHeld<public>(Agent:agent)<transacts><decides>:void = external {}
+ 
+-    # Allows players to change their outfit in game!
+-    changing_booth_device<public> := class<concrete><final>(creative_device_base):
+-        # Signaled when a `player` enters the changing booth device.
+-        PlayerEnterEvent<public>:listenable(player) = external {}
+-
+-        # Signaled when a `player` exits the changing booth device.
+-        PlayerExitEvent<public>:listenable(player) = external {}
++    # Used in tandem with `race_manager_device` to define the route players must traverse.
++    race_checkpoint_device<public> := class<concrete><final>(creative_device_base):
++        # Signaled when this checkpoint becomes the next checkpoint that `agent`s need to pass for the first time.
++        # Sends the first `agent` who is now targeting this checkpoint.
++        CheckpointBecomesCurrentForTheFirstTimeEvent<public>:listenable(agent) = external {}
++
++        # Signaled when this checkpoint becomes the current checkpoint for `agent`.
++        # Sends the `agent` who is now targeting this checkpoint.
++        CheckpointBecomesCurrentEvent<public>:listenable(agent) = external {}
++
++        # Signaled when an `agent` passes this checkpoint.
++        # Sends the `agent` that passed this checkpoint.
++        CheckpointCompletedEvent<public>:listenable(agent) = external {}
++
++        # Enables this device.
++        Enable<public>():void = external {}
++
++        # Disables this device.
++        Disable<public>():void = external {}
++
++        # Sets this checkpoint as the current checkpoint for `Agent`. This only functions if `Agent` has not already passed this checkpoint.
++        SetAsCurrentCheckpoint<public>(Agent:agent):void = external {}
++
++    # Used with the `race_checkpoint_device` to create more advanced racing modes.
++    race_manager_device<public> := class<concrete><final>(creative_device_base):
++        # Signaled when the race begins.
++        # Sends the `agent` that started the race.
++        RaceBeganEvent<public>:listenable(agent) = external {}
++
++        # Signaled when an `agent` finishes the race.
++        # Sends the `agent` that finished the race.
++        RaceCompletedEvent<public>:listenable(agent) = external {}
++
++        # Signaled when an `agent` completes their first lap.
++        # Sends the `agent` that finished the lap.
++        FirstLapCompletedEvent<public>:listenable(agent) = external {}
++
++        # Signaled when an `agent` completes a lap.
++        # Sends the `agent` that finished the lap.
++        LapCompletedEvent<public>:listenable(agent) = external {}
++
++        # Enables this device.
++        Enable<public>():void = external {}
++
++        # Disables this device.
++        Disable<public>():void = external {}
++
++        # Begins the race.
++        Begin<public>():void = external {}
++
++        # Ends the race.
++        End<public>():void = external {}
+ 
+     # Used to create a light which can have its color and brightness manipulated in response to in-game events.
+     customizable_light_device<public> := class<concrete><final>(creative_device_base):
+@@ -1734,6 +1846,15 @@
+ 
+         # Brightens the light by *Dimming Amount*.
+         UndimLight<public>():void = external {}
++
++    @deprecated
++    # Controls how the sky looks, as well as giving you options for changing the sun, clouds, stars or other objects in the sky above your island. You can control the sun and moon, and add other atmospheric elements like stars, fog and clouds. You can change the color of your light source, and blend different colors for your island's sky to create the perfect atmosphere for your game.
++    skydome_device<public> := class<concrete><final>(creative_device_base):
++        # Enables this device.
++        Enable<public>():void = external {}
++
++        # Disables this device.
++        Disable<public>():void = external {}
+ 
+     # Used to create and customize your own visual effects. This is more flexible than the `vfx_spawner_device`, which gives you a selection of pre-made visual effects to choose from but limits how much you can customize or change those effects.
+     vfx_creator_device<public> := class<concrete><final>(creative_device_base):
+@@ -1838,21 +1959,11 @@
+         # Sets the *Override Resource* option to *No*.
+         DisableResourceNodeOverrides<public>():void = external {}
+ 
+-    # Used to track and react to how many players are in a particular area, and optionally display that information in game.
+-    player_counter_device<public> := class<concrete><final>(creative_device_base):
+-        # Signaled when the player count matches *Target Player Count*. The frequency of evaluation against *Target Player Count* can be controlled through the device settings.
+-        CountSucceedsEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the player count does not match *Target Player Count*. The frequency of evaluation against *Target Player Count* can be controlled through the device settings.
+-        CountFailsEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when a valid player enters the zone and is counted. The frequency of evaluation against the *Target Player Count* can be controlled through the device settings.
+-        # Sends the `agent` that is now being counted.
+-        CountedEvent<public>:listenable(agent) = external {}
+-
+-        # Signaled when a player is no longer counted by this device, such as when they leave the zone, leave the game, or are assigned to a different `team` or class.
+-        # Sends the `agent` that is no longer being counted.
+-        RemovedEvent<public>:listenable(agent) = external {}
++    # Used to spawn fireflies that can be collected by `agent`s.
++    firefly_spawner_device<public> := class<concrete><final>(creative_device_base):
++        # Signaled when a firefly is collected.
++        # Sends the `agent` collected the firefly.
++        OnFirefliesCollected<public>:listenable(agent) = external {}
+ 
+         # Enables this device.
+         Enable<public>():void = external {}
+@@ -1860,121 +1971,11 @@
+         # Disables this device.
+         Disable<public>():void = external {}
+ 
+-        # Resets *Target Player Count* to the default value defined in the device settings. If *Target Player Count* was previously incremented or decremented, this reset immediately triggers a new comparison.
+-        (/Fortnite.com/Devices/player_counter_device:)Reset<public>():void = external {}
+-
+-        # Increments *Target Player Count* by `1`. Immediately triggers a new comparison.
+-        IncrementTargetCount<public>():void = external {}
+-
+-        # Decrements *Target Player Count* by `1`. Immediately triggers a new comparison.
+-        DecrementTargetCount<public>():void = external {}
+-
+-        # Triggers an evaluation of the current count vs *Target Player Count*, signaling `CountSucceedsEvent` or `CountFailsEvent` based on the evaluation result.
+-        CompareToTarget<public>():void = external {}
+-
+-        # Triggers `CountedEvent` for all `agent`s currently being counted.
+-        TransmitForAllCounted<public>():void = external {}
+-
+-        # Adds the player to the registered player list.
+-        # *Track Registered Players* determines how registered players are counted.
+-        Register<public>(Agent:agent):void = external {}
+-
+-        # Removes the player from the registered player list.
+-        # *Track Registered Players* determines how registered players are counted.
+-        Unregister<public>(Agent:agent):void = external {}
+-
+-        # Clears all players from the list of registered players.
+-        # *Track Registered Players* determines how registered players are counted.
+-        UnregisterAll<public>():void = external {}
+-
+-        # Show this device in the world as an info panel showing Current + Required player counts.
+-        ShowInfoPanel<public>():void = external {}
+-
+-        # Hide this device info panel from the world.
+-        HideInfoPanel<public>():void = external {}
+-
+-        # Returns whether this device is represented in the world as an info panel showing Current + Required player counts.
+-        IsShowingInfoPanel<public>()<transacts><decides>:void = external {}
+-
+-        # Sets the number of players required for this counter to succeed. Immediately triggers a new comparison.
+-        SetTargetCount<public>(Count:int):void = external {}
+-
+-        # Returns the number of players required for this counter to succeed.
+-        GetTargetCount<public>()<transacts>:int = external {}
+-
+-        # Returns the number of players currently counted by this device
+-        GetCount<public>()<transacts>:int = external {}
+-
+-        # Is true if the device is currently succeeding in its comparison.
+-        IsPassingTest<public>()<transacts><decides>:void = external {}
+-
+-        # Is true if `Agent` is currently counted by this device.
+-        IsCounted<public>(Agent:agent)<transacts><decides>:void = external {}
+-
+-        # Returns an array of agents that are currently counted by the device.
+-        GetCountedAgents<public>()<reads>:[]agent = external {}
+-
+-    # Used in tandem with `race_manager_device` to define the route players must traverse.
+-    race_checkpoint_device<public> := class<concrete><final>(creative_device_base):
+-        # Signaled when this checkpoint becomes the next checkpoint that `agent`s need to pass for the first time.
+-        # Sends the first `agent` who is now targeting this checkpoint.
+-        CheckpointBecomesCurrentForTheFirstTimeEvent<public>:listenable(agent) = external {}
+-
+-        # Signaled when this checkpoint becomes the current checkpoint for `agent`.
+-        # Sends the `agent` who is now targeting this checkpoint.
+-        CheckpointBecomesCurrentEvent<public>:listenable(agent) = external {}
+-
+-        # Signaled when an `agent` passes this checkpoint.
+-        # Sends the `agent` that passed this checkpoint.
+-        CheckpointCompletedEvent<public>:listenable(agent) = external {}
+-
+-        # Enables this device.
+-        Enable<public>():void = external {}
+-
+-        # Disables this device.
+-        Disable<public>():void = external {}
+-
+-        # Sets this checkpoint as the current checkpoint for `Agent`. This only functions if `Agent` has not already passed this checkpoint.
+-        SetAsCurrentCheckpoint<public>(Agent:agent):void = external {}
+-
+-    # Used with the `race_checkpoint_device` to create more advanced racing modes.
+-    race_manager_device<public> := class<concrete><final>(creative_device_base):
+-        # Signaled when the race begins.
+-        # Sends the `agent` that started the race.
+-        RaceBeganEvent<public>:listenable(agent) = external {}
+-
+-        # Signaled when an `agent` finishes the race.
+-        # Sends the `agent` that finished the race.
+-        RaceCompletedEvent<public>:listenable(agent) = external {}
+-
+-        # Signaled when an `agent` completes their first lap.
+-        # Sends the `agent` that finished the lap.
+-        FirstLapCompletedEvent<public>:listenable(agent) = external {}
+-
+-        # Signaled when an `agent` completes a lap.
+-        # Sends the `agent` that finished the lap.
+-        LapCompletedEvent<public>:listenable(agent) = external {}
+-
+-        # Enables this device.
+-        Enable<public>():void = external {}
+-
+-        # Disables this device.
+-        Disable<public>():void = external {}
+-
+-        # Begins the race.
+-        Begin<public>():void = external {}
+-
+-        # Ends the race.
+-        End<public>():void = external {}
+-
+-    @deprecated
+-    # Controls how the sky looks, as well as giving you options for changing the sun, clouds, stars or other objects in the sky above your island. You can control the sun and moon, and add other atmospheric elements like stars, fog and clouds. You can change the color of your light source, and blend different colors for your island's sky to create the perfect atmosphere for your game.
+-    skydome_device<public> := class<concrete><final>(creative_device_base):
+-        # Enables this device.
+-        Enable<public>():void = external {}
+-
+-        # Disables this device.
+-        Disable<public>():void = external {}
++        # Spawns new fireflies. The previous fireflies will be destroyed before a new fireflies spawn.
++        (/Fortnite.com/Devices/firefly_spawner_device:)Respawn<public>():void = external {}
++
++        # Resets respawn count.
++        ResetRespawnCount<public>():void = external {}
+ 
+     # Used to control the behavior of the map & minimap.
+     # Activation for a given `agent` can occur automatically via the device's *Activate Automatically* user option, by the `agent` entering and exiting the device's volume if using the *Activate on Trigger* user option, or via events from other devices or verse.
+@@ -2208,6 +2209,23 @@
+     # Used to adapt the controls to the camera perspective
+     gameplay_controls_third_person_device<public> := class<concrete><final>(gameplay_controls_device):
+ 
++    # Used to spawn an `agent` on an island. Use multiple `player_spawner_device`s to spawn multiple `agent`s.
++    player_spawner_device<public> := class<concrete><final>(creative_device_base):
++        # Signaled when an `agent` is spawned from this device.
++        # Sends the `agent` that spawned.
++        SpawnedEvent<public>:listenable(agent) = external {}
++
++        # Enables this device.
++        Enable<public>():void = external {}
++
++        # Disables this device.
++        Disable<public>():void = external {}
++
++        # Spawn `Player` from this device.
++        # Uses the device's `ShouldRespawnAlivePlayers` setting to control behavior when called on an alive player.
++        # If the device is not a valid spawn for that player, they will respawn from a valid spawn device, or from skydive if none are found.
++        SpawnPlayer<public>(Player:player):void = external {}
++
+     # Used to relay `agent` statistics to other devices and `agent`s. Can transmit statistics such as elimination count, eliminated count, or scores when certain conditions are met. Can also project a hologram of the `agent` and display text that can be altered in various positions and curvatures.
+     player_reference_device<public> := class<concrete><final>(creative_device_base):
+         # Signaled when this device is activated.
+@@ -2253,23 +2271,6 @@
+ 
+         # Returns the stat value that this device is currently tracking
+         GetStatValue<public>():int = external {}
+-
+-    # Used to spawn an `agent` on an island. Use multiple `player_spawner_device`s to spawn multiple `agent`s.
+-    player_spawner_device<public> := class<concrete><final>(creative_device_base):
+-        # Signaled when an `agent` is spawned from this device.
+-        # Sends the `agent` that spawned.
+-        SpawnedEvent<public>:listenable(agent) = external {}
+-
+-        # Enables this device.
+-        Enable<public>():void = external {}
+-
+-        # Disables this device.
+-        Disable<public>():void = external {}
+-
+-        # Spawn `Player` from this device.
+-        # Uses the device's `ShouldRespawnAlivePlayers` setting to control behavior when called on an alive player.
+-        # If the device is not a valid spawn for that player, they will respawn from a valid spawn device, or from skydive if none are found.
+-        SpawnPlayer<public>(Player:player):void = external {}
+ 
+     # Spawns a crowd to cheer you on.
+     crowd_volume_device<public> := class<concrete><final>(creative_device_base):
+@@ -2868,51 +2869,51 @@
+             # Disables this device.
+             Disable<public>():void = external {}
+ 
++        # Modify a setting on another Patchwork device in a regularly repeating pattern.
++        lfo_modulator_device<public> := class<concrete><final>(patchwork_device):
++
++        # Output Patchwork audio for players to hear.
++        speaker_device<public> := class<concrete><final>(patchwork_device):
++
++        cable_splitter_device<public> := class<concrete><final>(patchwork_device):
++
++        # Provides a shared tempo, key, and timeline for Patchwork devices to follow.
++        music_manager_device<public> := class<concrete><final>(patchwork_device):
++
++        # Turn Patchwork note inputs into audio using instrument samples.
++        instrument_player_device<public> := class<concrete><final>(patchwork_device):
++
+         # Create drum note patterns for Patchwork devices.
+         drum_sequencer_device<public> := class<concrete><final>(patchwork_device):
+ 
+-        # Output Patchwork audio for players to hear.
+-        speaker_device<public> := class<concrete><final>(patchwork_device):
+-
+-        cable_splitter_device<public> := class<concrete><final>(patchwork_device):
+-
+-        # Provides a shared tempo, key, and timeline for Patchwork devices to follow.
+-        music_manager_device<public> := class<concrete><final>(patchwork_device):
++        song_sync_device<public> := class<concrete><final>(patchwork_device):
++
++        # Send events to devices based on Patchwork note inputs.
++        note_trigger_device<public> := class<concrete><final>(patchwork_device):
++
++        # Modify a setting on another Patchwork device when triggered.
++        value_setter_device<public> := class<concrete><final>(patchwork_device):
+ 
+         # Apply a distortion effect to Patchwork audio inputs.
+         distortion_effect_device<public> := class<concrete><final>(patchwork_device):
+ 
+-        # Modify a setting on another Patchwork device in a regularly repeating pattern.
+-        lfo_modulator_device<public> := class<concrete><final>(patchwork_device):
+-
+-        # Turn Patchwork note inputs into audio using instrument samples.
+-        instrument_player_device<public> := class<concrete><final>(patchwork_device):
+-
+-        song_sync_device<public> := class<concrete><final>(patchwork_device):
+-
+-        # Send events to devices based on Patchwork note inputs.
+-        note_trigger_device<public> := class<concrete><final>(patchwork_device):
++        # Turn Patchwork note inputs into audio using customizable sound synthesis.
++        omega_synthesizer_device<public> := class<concrete><final>(patchwork_device):
++
++        # Turn Patchwork note inputs into audio using drum samples.
++        drum_player_device<public> := class<concrete><final>(patchwork_device):
++
++        # Apply an echo effect to Patchwork audio inputs.
++        echo_effect_device<public> := class<concrete><final>(patchwork_device):
++
++        # Create melodic note patterns for Patchwork devices.
++        note_sequencer_device<public> := class<concrete><final>(patchwork_device):
++
++        # Transpose Patchwork note inputs to follow a chord progression.
++        note_progressor_device<public> := class<concrete><final>(patchwork_device):
+ 
+         # Modify a setting on another Patchwork device in steps over time.
+         step_modulator_device<public> := class<concrete><final>(patchwork_device):
+-
+-        # Modify a setting on another Patchwork device when triggered.
+-        value_setter_device<public> := class<concrete><final>(patchwork_device):
+-
+-        # Turn Patchwork note inputs into audio using customizable sound synthesis.
+-        omega_synthesizer_device<public> := class<concrete><final>(patchwork_device):
+-
+-        # Turn Patchwork note inputs into audio using drum samples.
+-        drum_player_device<public> := class<concrete><final>(patchwork_device):
+-
+-        # Apply an echo effect to Patchwork audio inputs.
+-        echo_effect_device<public> := class<concrete><final>(patchwork_device):
+-
+-        # Transpose Patchwork note inputs to follow a chord progression.
+-        note_progressor_device<public> := class<concrete><final>(patchwork_device):
+-
+-        # Create melodic note patterns for Patchwork devices.
+-        note_sequencer_device<public> := class<concrete><final>(patchwork_device):
+ 
+     using {/Fortnite.com/Vehicles}
+     # A one stop automated refueling and repairing station for your vehicles.
+@@ -3222,6 +3223,35 @@
+         # Resumes either filling or emptying the volume.
+         ResumeVerticalMovement<public>():void = external {}
+ 
++    # Used to configure a single interactive mannequin, that can visualize characters, clothing, and perform emotes.
++    character_device<public> := class<concrete>(creative_device_base):
++        # Signaled when an `agent` interacts with this device.
++        # Sends the `agent` that interacted with this device.
++        InteractedWithEvent<public>:listenable(agent) = external {}
++
++        # Enables this device.
++        Enable<public>():void = external {}
++
++        # Disables this device.
++        Disable<public>():void = external {}
++
++        # Shows this device.
++        Show<public>():void = external {}
++
++        # Hides this device.
++        Hide<public>():void = external {}
++
++        # Plays an emote on the character created by this device.
++        PlayEmote<public>():void = external {}
++
++    # Allows the item shop to be opened when activated
++    item_shop_device<public> := class<concrete><final>(creative_device_base):
++        # Enables this device.
++        Enable<public>():void = external {}
++
++        # Disables this device.
++        Disable<public>():void = external {}
++
+     using {/Verse.org/Native}
+     # Used in conjunction with `advanced_storm_controller_device` to customize individual storm phases.
+     advanced_storm_beacon_device<public> := class<concrete><final>(creative_device_base):
+@@ -4922,35 +4952,6 @@
+     # Used to trigger a visual effect (a glow or an outline) when `agent`s pick it up.
+     visual_effect_powerup_device<public> := class<concrete><final>(powerup_device):
+ 
+-    # Used to configure a single interactive mannequin, that can visualize characters, clothing, and perform emotes.
+-    character_device<public> := class<concrete>(creative_device_base):
+-        # Signaled when an `agent` interacts with this device.
+-        # Sends the `agent` that interacted with this device.
+-        InteractedWithEvent<public>:listenable(agent) = external {}
+-
+-        # Enables this device.
+-        Enable<public>():void = external {}
+-
+-        # Disables this device.
+-        Disable<public>():void = external {}
+-
+-        # Shows this device.
+-        Show<public>():void = external {}
+-
+-        # Hides this device.
+-        Hide<public>():void = external {}
+-
+-        # Plays an emote on the character created by this device.
+-        PlayEmote<public>():void = external {}
+-
+-    # Allows the item shop to be opened when activated
+-    item_shop_device<public> := class<concrete><final>(creative_device_base):
+-        # Enables this device.
+-        Enable<public>():void = external {}
+-
+-        # Disables this device.
+-        Disable<public>():void = external {}
+-
+     # Creates a chair where `Agent`s can sit.
+     chair_device<public> := class<concrete><final>(creative_device_base):
+         # Signaled when an `agent` sits on the Chair.
+@@ -5331,54 +5332,32 @@
+         # Returns the player agents registered to this device.
+         GetRegisteredAgents<public>()<reads>:[]agent = external {}
+ 
+-    # Physics boulder that can be dislodged and damage `agent`s, vehicles, creatures, and structures.
+-    physics_boulder_device<public> := class<concrete><final>(physics_object_base_device):
+-        # Signaled when the balanced boulder is spawned on the base.
+-        BalancedBoulderSpawnedEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the balanced boulder is destroyed.
+-        BalancedBoulderDestroyedEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the base of the boulder is destroyed.
+-        BaseDestroyedEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the rolling boulder is destroyed.
+-        RollingBoulderDestroyedEvent<public>:listenable(tuple()) = external {}
+-
+-        # Destroys the boulder's base.
+-        DestroyBase<public>():void = external {}
+-
+-        # Releases the boulder sitting on the base, if there is one.
+-        ReleaseRollingBoulder<public>():void = external {}
+-
+-        # Destroys the current rolling boulder.
+-        DestroyRollingBoulder<public>():void = external {}
+-
+-    # Base class for various physics-based gameplay elements (e.g. boulders/trees).
+-    physics_object_base_device<public> := class<abstract><epic_internal>(prop_spawner_base_device):
+-
+-    # Physics tree that can be chopped down, and damage players, vehicles, creatures, and structures.
+-    physics_tree_device<public> := class<concrete><final>(physics_object_base_device):
+-        # Signaled when a tree is spawned.
+-        TreeSpawnedEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the log created by a tree is destroyed.
+-        LogDestroyedEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when the stump created by a tree is destroyed.
+-        StumpDestroyedEvent<public>:listenable(tuple()) = external {}
+-
+-        # Signaled when a tree has taken enough damage to be knocked down.
+-        TreeKnockedDownEvent<public>:listenable(tuple()) = external {}
+-
+-        # Releases the log from the tree, if there is one.
+-        ReleaseLog<public>():void = external {}
+-
+-        # Destroys the current log.
+-        DestroyLog<public>():void = external {}
+-
+-        # Destroys the current stump.
+-        DestroyStump<public>():void = external {}
++    # Used to allow players to select their *Class* from a *Class Selector UI*.
++    class_selector_ui_device<public> := class<concrete><final>(creative_device_base):
++        # Signaled when an `agent` selects a class.
++        # Sends the `agent` that selected a class.
++        ClassSelectedEvent<public>:listenable(agent) = external {}
++
++        # Signaled when an `agent` changes a class.
++        # Sends the `agent` that selected a class and the `int` class that the player has changed to.
++        ClassChangedEvent<public>:listenable(tuple(agent, int)) = external {}
++
++        # Signaled when an `agent` closes the UI.
++        # Sends the `agent` that closed the UI.
++        UIClosedEvent<public>:listenable(agent) = external {}
++
++        # Signaled when the UI is opened.
++        # Sends the `agent` that is responsible for opening the UI.
++        UIOpenedEvent<public>:listenable(agent) = external {}
++
++        # Enables this device.
++        Enable<public>():void = external {}
++
++        # Disables this device.
++        Disable<public>():void = external {}
++
++        # Show the *Class Selector UI* to `Agent`.
++        Show<public>(Agent:agent):void = external {}
+ 
+     # Used to create HUD text boxes that give players information, and allows responses to be customized to player choices.
+     popup_dialog_device<public> := class<concrete><final>(creative_device_base):
+@@ -5441,6 +5420,55 @@
+ 
+         # Returns the *Title* text for this popup.
+         GetTitleText<public>()<transacts>:string = external {}
++
++    # Physics boulder that can be dislodged and damage `agent`s, vehicles, creatures, and structures.
++    physics_boulder_device<public> := class<concrete><final>(physics_object_base_device):
++        # Signaled when the balanced boulder is spawned on the base.
++        BalancedBoulderSpawnedEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the balanced boulder is destroyed.
++        BalancedBoulderDestroyedEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the base of the boulder is destroyed.
++        BaseDestroyedEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the rolling boulder is destroyed.
++        RollingBoulderDestroyedEvent<public>:listenable(tuple()) = external {}
++
++        # Destroys the boulder's base.
++        DestroyBase<public>():void = external {}
++
++        # Releases the boulder sitting on the base, if there is one.
++        ReleaseRollingBoulder<public>():void = external {}
++
++        # Destroys the current rolling boulder.
++        DestroyRollingBoulder<public>():void = external {}
++
++    # Base class for various physics-based gameplay elements (e.g. boulders/trees).
++    physics_object_base_device<public> := class<abstract><epic_internal>(prop_spawner_base_device):
++
++    # Physics tree that can be chopped down, and damage players, vehicles, creatures, and structures.
++    physics_tree_device<public> := class<concrete><final>(physics_object_base_device):
++        # Signaled when a tree is spawned.
++        TreeSpawnedEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the log created by a tree is destroyed.
++        LogDestroyedEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when the stump created by a tree is destroyed.
++        StumpDestroyedEvent<public>:listenable(tuple()) = external {}
++
++        # Signaled when a tree has taken enough damage to be knocked down.
++        TreeKnockedDownEvent<public>:listenable(tuple()) = external {}
++
++        # Releases the log from the tree, if there is one.
++        ReleaseLog<public>():void = external {}
++
++        # Destroys the current log.
++        DestroyLog<public>():void = external {}
++
++        # Destroys the current stump.
++        DestroyStump<public>():void = external {}
+ 
+     # A device that generates a scoreboard stat that can be used by the game to determine Game End and Round End conditions.
+     # The stat can apply to individual players, teams, or everyone in the match. It can also generate a Level that will increment by 1 each time Value reaches *Max Value*, resetting Value to 0 when Level increments.
+@@ -5536,33 +5564,6 @@
+         # For the Stat Powerup, this is the value of the stat that the powerup will add or remove to a player that picks up the powerup.
+         GetMagnitude<public>()<transacts>:float = external {}
+ 
+-    # Used to allow players to select their *Class* from a *Class Selector UI*.
+-    class_selector_ui_device<public> := class<concrete><final>(creative_device_base):
+-        # Signaled when an `agent` selects a class.
+-        # Sends the `agent` that selected a class.
+-        ClassSelectedEvent<public>:listenable(agent) = external {}
+-
+-        # Signaled when an `agent` changes a class.
+-        # Sends the `agent` that selected a class and the `int` class that the player has changed to.
+-        ClassChangedEvent<public>:listenable(tuple(agent, int)) = external {}
+-
+-        # Signaled when an `agent` closes the UI.
+-        # Sends the `agent` that closed the UI.
+-        UIClosedEvent<public>:listenable(agent) = external {}
+-
+-        # Signaled when the UI is opened.
+-        # Sends the `agent` that is responsible for opening the UI.
+-        UIOpenedEvent<public>:listenable(agent) = external {}
+-
+-        # Enables this device.
+-        Enable<public>():void = external {}
+-
+-        # Disables this device.
+-        Disable<public>():void = external {}
+-
+-        # Show the *Class Selector UI* to `Agent`.
+-        Show<public>(Agent:agent):void = external {}
+-
+     # Used to regenerate an `agent`'s health and/or shields.
+     health_powerup_device<public> := class<concrete><final>(powerup_device):
+         # Sets the *Magnitude* for this powerup, clamped to the Min and Max defined in the device.
+@@ -5783,15 +5784,15 @@
+     # Specialized `vehicle_spawner_device` that allows a helicopter to be configured and spawned.
+     vehicle_spawner_helicopter_device<public> := class<concrete><final>(vehicle_spawner_device):
+ 
++    # Specialized `vehicle_spawner_device` that allows an anti-vehicle turret to be configured and spawned.
++    vehicle_spawner_heavy_turret_device<public> := class<concrete><final>(vehicle_spawner_device):
++
++    # Specialized `vehicle_spawner_device` that allows a UFO to be configured and spawned.
++    vehicle_spawner_ufo_device<public> := class<concrete><final>(vehicle_spawner_device):
++
+     # Specialized `vehicle_spawner_device` that allows a siege cannon to be configured and spawned.
+     vehicle_spawner_siege_cannon_device<public> := class<concrete><final>(vehicle_spawner_device):
+ 
+-    # Specialized `vehicle_spawner_device` that allows an anti-vehicle turret to be configured and spawned.
+-    vehicle_spawner_heavy_turret_device<public> := class<concrete><final>(vehicle_spawner_device):
+-
+-    # Specialized `vehicle_spawner_device` that allows a UFO to be configured and spawned.
+-    vehicle_spawner_ufo_device<public> := class<concrete><final>(vehicle_spawner_device):
+-
+     # Specialized `vehicle_spawner_device` that allows a tank to be configured and spawned.
+     vehicle_spawner_tank_device<public> := class<concrete><final>(vehicle_spawner_device):
+ 
+@@ -5801,14 +5802,14 @@
+     # Specialized `vehicle_spawner_device` that allows a dirtbike to be configured and spawned.
+     vehicle_spawner_dirtbike_device<public> := class<concrete><final>(vehicle_spawner_device):
+ 
++    # Specialized `vehicle_spawner_device` that allows a sportbike to be configured and spawned.
++    vehicle_spawner_sportbike_device<public> := class<concrete><final>(vehicle_spawner_device):
++
++    # Specialized `vehicle_spawner_device` that allows a Nitro Drifter sedan to be configured and spawned.
++    vehicle_spawner_nitro_drifter_sedan_device<public> := class<concrete><final>(vehicle_spawner_device):
++
+     # Specialized `vehicle_spawner_device` that allows a valet SUV to be configured and spawned.
+     vehicle_spawner_valet_suv_device<public> := class<concrete><final>(vehicle_spawner_device):
+-
+-    # Specialized `vehicle_spawner_device` that allows a sportbike to be configured and spawned.
+-    vehicle_spawner_sportbike_device<public> := class<concrete><final>(vehicle_spawner_device):
+-
+-    # Specialized `vehicle_spawner_device` that allows a Nitro Drifter sedan to be configured and spawned.
+-    vehicle_spawner_nitro_drifter_sedan_device<public> := class<concrete><final>(vehicle_spawner_device):
+ 
+     # Used to set and trigger conversations made via the Conversation Graph. The conversation triggered is assigned to the device.
+     conversation_device<public> := class<concrete><final>(creative_device_base, enableable):
+@@ -6409,6 +6410,7 @@
+         # If there is no triggering `agent`, players will only be healed if `Heal Targets` is set to `Everyone`.
+         Burst<public>():void = external {}
+ 
++    using {/Fortnite.com/Assets}
+     # Used to spawn NPCs made with Character Definition asset.
+     npc_spawner_device<public> := class<concrete><final>(creative_device_base):
+         # Signaled when a character is spawned.
+@@ -6428,6 +6430,9 @@
+ 
+         # Resets the spawn count allowing spawning of a new batch of characters.
+         (/Fortnite.com/Devices/npc_spawner_device:)Reset<public>():void = external {}
++
++        # Set the NPC character definition to use. Fails if the character type is different from one in the current definition.
++        SetNPCCharacterDefinition<public>(CharacterDefinition:npc_character_definition)<transacts><decides>:void = external {}
+ 
+         # Tries to spawn a character.
+         Spawn<public>():void = external {}
+@@ -7931,7 +7936,7 @@
+ 
+         SetEnvironmentalDamageMultiplier<native><public>(Val:float):void
+ 
+-        @editable
++        @editable {}
+         # Range based damage multiplier
+         var<private> RangeDamageMultiplier<native><public>:[]fort_range_damage_multiplier = external {}
+ 
+@@ -8027,79 +8032,79 @@
+ 
+         SetShotAmmoCost<native><public>(Val:int):void
+ 
+-        @editable
++        @editable {}
+         # The transform by which to offset the weapon muzzle
+         var<private> MuzzleOffset<native><public>:(/Verse.org/SpatialMath:)transform = external {}
+ 
+         SetMuzzleOffset<native><public>(Val:(/Verse.org/SpatialMath:)transform):void
+ 
+-        @editable
++        @editable {}
+         # The particle system to use for weapon muzzle flash
+         var<private> MuzzleFlash<native><public>:?particle_system = external {}
+ 
+         SetMuzzleFlash<native><public>(Val:?particle_system):void
+ 
+-        @editable
++        @editable {}
+         # The particle system to use for weapon bullet tracers. The FX system's HitDistance parameter will update with impact distance or max range of the weapon.
+         var<private> BulletTracer<native><public>:?particle_system = external {}
+ 
+         SetBulletTracer<native><public>(Val:?particle_system):void
+ 
+-        @editable
++        @editable {}
+         # The transform by which to offset the bullet shell ejection FX
+         var<private> EjectionPortOffset<native><public>:(/Verse.org/SpatialMath:)transform = external {}
+ 
+         SetEjectionPortOffset<native><public>(Val:(/Verse.org/SpatialMath:)transform):void
+ 
+-        @editable
++        @editable {}
+         # The particle system to use for weapon bullet shells
+         var<private> BulletShells<native><public>:?particle_system = external {}
+ 
+         SetBulletShells<native><public>(Val:?particle_system):void
+ 
+-        @editable
++        @editable {}
+         # The sounds to use when firing the weapon
+         var<private> WeaponFireSound<native><public>:[]sound_wave = external {}
+ 
+         SetWeaponFireSound<native><public>(Val:[]sound_wave):void
+ 
+-        @editable
++        @editable {}
+         # The sounds to use when equipping the weapon
+         var<private> EquipSound<native><public>:[]sound_wave = external {}
+ 
+         SetEquipSound<native><public>(Val:[]sound_wave):void
+ 
+-        @editable
++        @editable {}
+         # The sounds to use when starting aiming down sights
+         var<private> AimingDownSightsStartSound<native><public>:[]sound_wave = external {}
+ 
+         SetAimingDownSightsStartSound<native><public>(Val:[]sound_wave):void
+ 
+-        @editable
++        @editable {}
+         # The sounds to use when ending aiming down sights
+         var<private> AimingDownSightsEndSound<native><public>:[]sound_wave = external {}
+ 
+         SetAimingDownSightsEndSound<native><public>(Val:[]sound_wave):void
+ 
+-        @editable
++        @editable {}
+         # The sounds to use when starting a reload
+         var<private> ReloadStartSound<native><public>:[]sound_wave = external {}
+ 
+         SetReloadStartSound<native><public>(Val:[]sound_wave):void
+ 
+-        @editable
++        @editable {}
+         # The sounds to use when inserting a magazine during reload
+         var<private> ReloadInsertSound<native><public>:[]sound_wave = external {}
+ 
+         SetReloadInsertSound<native><public>(Val:[]sound_wave):void
+ 
+-        @editable
++        @editable {}
+         # The sounds to use when finishing a reload
+         var<private> ReloadEndSound<native><public>:[]sound_wave = external {}
+ 
+         SetReloadEndSound<native><public>(Val:[]sound_wave):void
+ 
+-        @editable
++        @editable {}
+         # The sounds to use when the weapon is out of ammo
+         var<private> OutOfAmmoSound<native><public>:[]sound_wave = external {}
+ 
+@@ -8291,6 +8296,10 @@
+         # Get the play_animation_controller for the specified character.
+         (InCharacter:fort_character).GetPlayAnimationController<native><public>()<transacts><decides>:play_animation_controller
+ 
++# Module import path: /Fortnite.com/Assets
++(/Fortnite.com:)Assets<public> := module:
++    npc_character_definition<native><public> := class<computes><final><epic_internal>:
++
+ # Module import path: /Fortnite.com/Characters
+ Characters<public> := module:
+     using {/Verse.org/SpatialMath}
+@@ -9903,8 +9912,6 @@
+ 
+     ExoticLeapingLightningGun_BR_CH7S2_Exotic<public> := class<final><concrete>(entity):
+ 
+-    ExoticReconBow_BR_CH7S2_Exotic<public> := class<final><concrete>(entity):
+-
+     ExplosiveGooGun_BR_CH3S4_Rare<public> := class<final><concrete>(entity):
+ 
+     ExplosiveRepeaterRifle_BR_CH4S3_Common<public> := class<final><concrete>(entity):
+@@ -10809,6 +10816,8 @@
+ 
+     ReaperSniperRifle_Ballistic_V1_Common<public> := class<final><concrete>(entity):
+ 
++    ExoticReconBow_BR_CH7S2_Exotic<public> := class<final><concrete>(entity):
++
+     ReconScanner_BR_CH2S7_Rare<public> := class<final><concrete>(entity):
+ 
+     Recycler_BR_CH2S6_Rare<public> := class<final><concrete>(entity):
+@@ -11249,6 +11258,16 @@
+ 
+     EnhancedSurgefireSMG_BR_CH6S1_Mythic<public> := class<final><concrete>(entity):
+ 
++    VanguardBurstRifle_BR_CH7S3_Common<public> := class<final><concrete>(entity):
++
++    VanguardBurstRifle_BR_CH7S3_Uncommon<public> := class<final><concrete>(entity):
++
++    VanguardBurstRifle_BR_CH7S3_Rare<public> := class<final><concrete>(entity):
++
++    VanguardBurstRifle_BR_CH7S3_Epic<public> := class<final><concrete>(entity):
++
++    VanguardBurstRifle_BR_CH7S3_Legendary<public> := class<final><concrete>(entity):
++
+     Swarmstrike_BR_CH6S4_Epic<public> := class<final><concrete>(entity):
+ 
+     Swarmstrike_BR_CH6S4_Legendary<public> := class<final><concrete>(entity):
+@@ -11476,16 +11495,6 @@
+     UnstableBow_BR_CH2S6_Exotic<public> := class<final><concrete>(entity):
+ 
+     UnstableFrostfireShotgun_BR_CH6S3_Exotic<public> := class<final><concrete>(entity):
+-
+-    VanguardBurstRifle_BR_CH7S3_Common<public> := class<final><concrete>(entity):
+-
+-    VanguardBurstRifle_BR_CH7S3_Uncommon<public> := class<final><concrete>(entity):
+-
+-    VanguardBurstRifle_BR_CH7S3_Rare<public> := class<final><concrete>(entity):
+-
+-    VanguardBurstRifle_BR_CH7S3_Epic<public> := class<final><concrete>(entity):
+-
+-    VanguardBurstRifle_BR_CH7S3_Legendary<public> := class<final><concrete>(entity):
+ 
+     Vector7DMR_BR_CH7S2_Rare<public> := class<final><concrete>(entity):
+ 
